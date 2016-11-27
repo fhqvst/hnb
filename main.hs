@@ -22,10 +22,10 @@ parseData fileName = withFile fileName ReadMode $
            return contents
 
 probWord :: String -> M.Map String Double -> Double
-probWord string corpus = (M.findWithDefault 1.0 string corpus) / fromIntegral (length (M.keys corpus))
+probWord string corpus = log $ (M.findWithDefault 1.0 string corpus) / fromIntegral (length (M.keys corpus))
 
 classify :: String -> M.Map String Double -> Double -> Double
-classify string corpus prior = prior * product probWords
+classify string corpus prior = exp $ prior + sum probWords
   where probWords = map (\word -> probWord word corpus) (tokenize string)
 
 main :: IO ()
@@ -34,8 +34,8 @@ main = do
   corpusPos <- parseData "data/positive.txt"
   corpusNeg <- parseData "data/negative.txt"
 
-  let tokenizedPos = seq corpusPos [ (tokenize string, Pos) | string <- lines corpusPos ]
-  let tokenizedNeg = seq corpusNeg [ (tokenize string, Pos) | string <- lines corpusNeg ]
+  let tokenizedPos = [ (tokenize string, Pos) | string <- lines corpusPos ]
+  let tokenizedNeg = [ (tokenize string, Pos) | string <- lines corpusNeg ]
 
   -- Count words
   let posWords = concatMap fst tokenizedPos
@@ -55,13 +55,11 @@ main = do
 
   -- Calculate prior probabilities
   let totalCount = fromIntegral $ length (posWords ++ negWords)
-  let priorPos = sum (M.elems posCount) / totalCount
-  let priorNeg = sum (M.elems negCount) / totalCount
+  let priorPos = log $ sum (M.elems posCount) / totalCount
+  let priorNeg = log $ sum (M.elems negCount) / totalCount
 
   -- Classify a test string
-  let testString = "Absolutely, I hate these... words."  
+  let testString = "This movie was absolutely awful. I hated it. The movie sucks."  
 
-  putStrLn $ printf "Positive: %.9f" $ classify testString posCount priorPos
-  putStrLn $ printf "Negative: %.9f" $ classify testString negCount priorNeg
-  
-  putStrLn "Finished" 
+  putStrLn $ printf "Positive: %.25f" $ classify testString posCount priorPos
+  putStrLn $ printf "Negative: %.25f" $ classify testString negCount priorNeg
