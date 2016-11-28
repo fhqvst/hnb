@@ -36,7 +36,7 @@ main = do
   corpusNeg <- parseData "data/negative.txt"
 
   let tokenizedPos = [ (tokenize string, Pos) | string <- lines corpusPos ]
-  let tokenizedNeg = [ (tokenize string, Pos) | string <- lines corpusNeg ]
+  let tokenizedNeg = [ (tokenize string, Neg) | string <- lines corpusNeg ]
 
   -- Count words
   let posWords = concatMap fst tokenizedPos
@@ -72,7 +72,7 @@ main = do
 
   sentiment <- do
     if (max testPos testNeg) == testPos
-      then return "Positive"
-      else return "Negative"
+      then return $ "Positive: " ++ show testPos
+      else return $ "Negative: " ++ show testNeg
 
   putStrLn sentiment
