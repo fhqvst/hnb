@@ -21,12 +21,13 @@ parseData fileName = withFile fileName ReadMode $
            contents `deepseq` hClose h
            return contents
 
-probWord :: String -> M.Map String Double -> Double
-probWord string corpus = log $ (M.findWithDefault 1.0 string corpus) / fromIntegral (length (M.keys corpus))
+probWord :: String -> M.Map String Double -> M.Map String Double -> Double
+probWord string corpus vocab = (M.findWithDefault 1.0 string corpus) / fromIntegral (length $ (M.keys corpus) ++ (M.keys vocab))
 
-classify :: String -> M.Map String Double -> Double -> Double
-classify string corpus prior = exp $ prior + sum probWords
-  where probWords = map (\word -> probWord word corpus) (tokenize string)
+-- P(C|D) = P(C) * P(w1|C) * P (w2|C) * ... * P(wn|C)
+classify :: String -> M.Map String Double -> M.Map String Double -> Double -> Double
+classify string corpus vocab prior = exp $ prior + sum probWords
+  where probWords = map (\word -> log $ probWord word corpus vocab) (tokenize string)
 
 main :: IO ()
 main = do
@@ -42,6 +43,7 @@ main = do
   let negWords = concatMap fst tokenizedNeg
   let posCount = M.fromListWith (+) [ (word, 1.0) | word <- posWords ]
   let negCount = M.fromListWith (+) [ (word, 1.0) | word <- negWords ]
+  let totCount = M.fromListWith (+) [ (word, 1.0) | word <- (posWords ++ negWords) ]
   
   -- Split into training vs. testing
   let splitPos = splitAt (floor $ 0.75 * fromIntegral (length tokenizedPos)) tokenizedPos
@@ -54,12 +56,23 @@ main = do
   let testNeg = snd splitNeg
 
   -- Calculate prior probabilities
-  let totalCount = fromIntegral $ length (posWords ++ negWords)
+  let totalCount = sum $ M.elems totCount
   let priorPos = log $ sum (M.elems posCount) / totalCount
   let priorNeg = log $ sum (M.elems negCount) / totalCount
 
-  -- Classify a test string
-  let testString = "This movie was absolutely awful. I hated it. The movie sucks."  
+-- Classify a test string
+  putStr "Input: "
+  testString <- getLine 
 
-  putStrLn $ printf "Positive: %.25f" $ classify testString posCount priorPos
-  putStrLn $ printf "Negative: %.25f" $ classify testString negCount priorNeg
+  -- putStrLn $ printf "Positive: %.25f" $ classify testString posCount totCount priorPos
+  -- putStrLn $ printf "Negative: %.25f" $ classify testString negCount totCount priorNeg
+
+  let testPos = classify testString posCount totCount priorPos
+  let testNeg = classify testString negCount totCount priorNeg
+
+  sentiment <- do
+    if (max testPos testNeg) == testPos
+      then return "Positive"
+      else return "Negative"
+
+  putStrLn sentiment
