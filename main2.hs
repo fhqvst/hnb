@@ -31,7 +31,9 @@ main = do
   putStrLn $ "Vocabulary: " ++ show (length (M.elems (NB.vocabulary model)))
   putStrLn $ "Positive: " ++ show (length (M.elems (NB.positive model)))
   putStrLn $ "Negative: " ++ show (length (M.elems (NB.negative model)))
-
-  print $ NB.classify model "This is a negative phrase"
+  putStrLn $ "Positive documents: " ++ show (M.findWithDefault 0.0 NB.pos $ NB.counts model)
+  putStrLn $ "Negative documents: " ++ show (M.findWithDefault 0.0 NB.neg $ NB.counts model)
+  
+  print $ NB.classify model NB.pos "This is a negative phrase"
 
   putStrLn "Done"
