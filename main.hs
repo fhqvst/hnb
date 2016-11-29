@@ -1,6 +1,8 @@
 import qualified NaiveBayes as NB
 import System.IO
 import Control.DeepSeq
+import Control.Monad
+import Text.Printf
 import qualified Data.Map.Strict as M
 
 parseData :: FilePath -> IO String
@@ -22,18 +24,22 @@ main = do
   
   -- Train a model using corpuses
   let corpus = corpusPos ++ corpusNeg
+
+  putStrLn "\nTraining model..."
   let model = NB.train NB.empty corpus
 
   -- Test the model
   -- @todo
   
-  putStrLn "Loading..."
-  putStrLn $ "Vocabulary: " ++ show (length (M.elems (NB.vocabulary model)))
-  putStrLn $ "Positive: " ++ show (length (M.elems (NB.positive model)))
-  putStrLn $ "Negative: " ++ show (length (M.elems (NB.negative model)))
-  putStrLn $ "Positive documents: " ++ show (M.findWithDefault 0.0 NB.pos $ NB.counts model)
-  putStrLn $ "Negative documents: " ++ show (M.findWithDefault 0.0 NB.neg $ NB.counts model)
-  
-  print $ NB.classify model NB.pos "This is a negative phrase"
+  putStrLn $ "- Vocabulary: " ++ show (length (M.elems (NB.vocabulary model)))
+  putStrLn $ "- Positive: " ++ show (length (M.elems (NB.positive model)))
+  putStrLn $ "- Negative: " ++ show (length (M.elems (NB.negative model)))
+  putStrLn $ "- Positive documents: " ++ show (M.findWithDefault 0.0 NB.pos $ NB.counts model)
+  putStrLn $ "- Negative documents: " ++ show (M.findWithDefault 0.0 NB.neg $ NB.counts model)
 
-  putStrLn "Done"
+  putStrLn ""
+
+  forever $ do
+    putStr "Input: "
+    string <- getLine
+    printf $ "--- " ++ (show (NB.classify model string)) ++ "\n"
