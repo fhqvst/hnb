@@ -1,4 +1,5 @@
 # hnb
-A bag of words implementation of Naive Bayes in Haskell
+Simple sentiment analysis using a Bayes classifier
 
-This implementation uses movie review data from Pang et al and utilizes laplace smoothing for missing tokens.
+This implementation utilizes Laplace smoothing for missing tokens and log probabilities to handle underflow.
+The data used for training is from [Pang and Lee et al.](https://www.cs.cornell.edu/people/pabo/movie-review-data/) at Cornell University.
