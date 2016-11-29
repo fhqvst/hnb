@@ -41,5 +41,6 @@ main = do
 
   forever $ do
     putStr "Input: "
+    hFlush stdout
     string <- getLine
-    printf $ "--- " ++ (show (NB.classify model string)) ++ "\n"
+    printf $ "--> " ++ (show (NB.classify model string)) ++ "\n"
